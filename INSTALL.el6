@@ -1,0 +1,131 @@
+Installation of the Collective Intelligence Framework v1 for Enterprise Linux 6 Servers
+
+See the README for an overview of the CIF Enterprise Linux repositories.
+
+* Pre-requisites
+
+The CIF Enterprise Linux repositories currently only supports Enterprise Linux 6 and 
+clones.  Standard platform repositories and Extra Packages for Enterprise Linux (EPEL)
+repositories must also be available to fully resolve CIF's RPM dependencies.
+
+EPEL may be enabled by installing an appropriate release RPM, if available on your
+platform, or by following the appropriate link for your platform from:
+
+https://fedoraproject.org/wiki/EPEL
+
+* Single Machine Install
+
+This procedure assumes that a single machine will be tasked with running the CIF
+database, router and Smrt feed parser components.  A multi-machine installation
+procedure and packages will be created as a later time to facilitate distributed
+environments.
+
+All commands should be run as root.
+
+1) Install the cif-v1-release RPM:
+
+http://akreffett.github.io/repos/cif-v1/el6/x86_64/Packages/cif-v1-release-1-1.noarch.rpm
+
+2) Install the CIF RPM and all of it's dependencies:
+
+# yum install cif
+
+You will be asked to verify the CIF RPM GPG key.
+
+3) Prepare the CIF database:
+
+# service postgresql initdb
+# chkconfig postgresql on
+
+4) Prepare the filesystem for CIF index and archive table spaces:
+
+Follow the CIF procedure for file system layout at:
+http://code.google.com/p/collective-intelligence-framework/wiki/DiskLayout_v1
+
+The scripts later in the install process assume that the archive and index mounts
+are located at /mnt/archive and /mnt/index respectively.
+
+5) Configure and tune Postgres for CIF
+
+# bash /opt/cif/scripts/tunepostgres.sh
+# cp /opt/cif/scripts/pg_hba.conf /var/lib/pgsql/data
+# service postgresql start
+
+pg_hba.conf distributed with CIF configures authentication to trust all connections from the
+local machine to any database role.  It should be configured to meet the needs of your
+specific installation.
+
+6) Create CIF database tables and indices:
+
+# bash /opt/cif/scripts/initdb.sh
+
+7) Configure bind to forward to Google Open Resolver:
+
+For background:
+http://code.google.com/p/collective-intelligence-framework/wiki/BindSetup_v1
+
+# cp /opt/cif/scripts/named.conf /etc/named.conf
+# service named start
+# chkconfig named on
+
+Be sure to edit /etc/resolv.conf to reflect the local resolver:
+
+search your.domain.com
+nameserver 127.0.0.1
+
+8) Configure and start httpd
+
+*** Note for SELinux users ***
+
+# setsebool -P httpd_can_network_connect_db 1
+
+*** Note for SELinux users ***
+
+# service httpd start
+# chkconfig httpd on
+
+9) Generate API keys
+
+Background:
+http://code.google.com/p/collective-intelligence-framework/wiki/ServerInstall_v1#APIKey
+
+CIF Smrt:
+# /opt/cif/bin/cif_apikey -C /opt/cif/cif.conf -u cif_smrt -G everyone -g everyone -a -w
+
+Copy this key to the apikey field of the [cif_smrt] section of /opt/cif/cif.conf 
+
+CIF Client:
+# /opt/cif/bin/cif_apikey -C /opt/cif/cif.conf -u cif_client -G everyone -g everyone -a -w
+
+Copy this key to the apikey field of the [client] section of /opt/cif/cif.conf
+
+10) Customize CIF configuration for your environment
+
+HTTP Proxy:
+If your environment requires an HTTP proxy configure it in cif.conf by setting
+
+proxy = <proxy url>
+ex: proxy = http://your.domain.com:8080
+
+in the [cif_smrt] section of /opt/cif/cif.conf
+
+CIF crontool:
+
+Setup cif_crontab:
+http://code.google.com/p/collective-intelligence-framework/wiki/ServerInstall_v1#Configuring_Crontab
+
+A standard CIF cron configuration can be installed from the distribution:
+# cp /opt/cif/scripts/cif_crontool /etc/cron.d/
+
+11) Load initial data:
+
+Background:
+http://code.google.com/p/collective-intelligence-framework/wiki/ServerInstall_v1#Load_Data
+
+# /opt/cif/bin/cif_crontool -C /opt/cif/cif.conf -p daily -d -P
+# /opt/cif/bin/cif_crontool -C /opt/cif/cif.conf -p weekly -d -P
+
+12) Test and verify
+
+# /opt/cif/bin/cif -C /opt/cif/cif.conf -n -q google.com
+

@@ -1,0 +1,36 @@
+This is a collection of YUM repositories for for installing the Collective
+Intelligence Framework (CIF) via RPM instead of manual tarball/CPAN module
+installation.
+
+The included repositories are:
+
+* /repos/cif-v1 	- CIF version 1.x releases and dependencies
+* /repos/cif-v1-testing	- CIF version 1.x testing releases
+
+*** Important ***
+These repositories contain RPMs that will upgrade some RPMs from the version
+shipped on standard platforms (RHEL/CentOS/etc) from either the base or EPEL
+repositories.  Beware that while these updated packages are not known to 
+conflict with other packages there is a chance that conflicts may arise in
+the future.  As such it is recommended that these packages only be used on
+dedicated hardware of VMs
+*** Important ***
+
+Under each repository are platform- and architecture-specific directories
+following this pattern:
+
+{platform}/{arch}
+
+Where platform is currently only el6 and arch is one of SRPMS for source RPMs,
+i386 and x86_64 for 32-bit and 64-bit ISA, respecively.
+
+For example the RHEL 6 64-bit release repository is located at:
+
+* http://akreffett.github.io/repos/cif-v1/el6/x86_64
+
+The cif-v1 repository for each platform/architecture contains a copy of the
+cif-v1-release RPM that can be installed which will install the YUM repositories
+and GPG keys for both of the normal and testing repositories.  It can be found at:
+
+http://akreffett.github.io/repos/cif-v1/el6/{arch}/Packages/cif-v1-release-1-1.noarch.rpm
+
